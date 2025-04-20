@@ -1,4 +1,6 @@
-# Stateless [![Build status](https://github.com/dotnet-state-machine/stateless/actions/workflows/BuildAndTestOnPullRequests.yml/badge.svg)](https://github.com/dotnet-state-machine/stateless/actions/workflows/BuildAndTestOnPullRequests.yml) [![NuGet Pre Release](https://img.shields.io/nuget/vpre/Stateless.svg)](https://www.nuget.org/packages/stateless) [![Join the chat at https://gitter.im/dotnet-state-machine/stateless](https://badges.gitter.im/dotnet-state-machine/stateless.svg)](https://gitter.im/dotnet-state-machine/stateless?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Stack Overflow](https://img.shields.io/badge/stackoverflow-tag-orange.svg)](http://stackoverflow.com/questions/tagged/stateless-state-machine)
+# Stateless 
+Modified for Unity UPM package and optional UniTask.
+
 
 **Create *state machines* and lightweight *state machine-based workflows* directly in .NET code:**
 
@@ -272,32 +274,5 @@ await stateMachine.FireAsync(Trigger.Assigned);
 
 ## Advanced Features ##
 
-### Retaining the SynchronizationContext ###
-In specific situations where all handler methods must be invoked with the consumer's `SynchronizationContext`, set the `RetainSynchronizationContext` property on creation:
+- Removed - No synchronizationcontext with UniTask.
 
-```csharp
-var stateMachine = new StateMachine<State, Trigger>(initialState)
-{
-    RetainSynchronizationContext = true
-};
-```
-
-Setting this is vital within a Microsoft Orleans Grain for example, which requires the `SynchronizationContext` in order to make calls to other Grains.
-
-## Building
-
-Stateless runs on .NET runtime version 4+ and practically all modern .NET platforms by targeting .NET Framework 4.6.2, .NET Standard 2.0 and .NET 8.0. Visual Studio 2017 or later is required to build the solution.
-
-
-## Contributing
-
-We welcome contributions to this project. Check [CONTRIBUTING.md](CONTRIBUTING.md) for more info.
-
-
-## Project Goals
-
-This page is an almost-complete description of Stateless, and its explicit aim is to remain minimal.
-
-Please use the issue tracker or the Discussions page if you'd like to report problems or discuss features.
-
-(_Why the name? Stateless implements the set of rules regarding state transitions, but, at least when the delegate version of the constructor is used, doesn't maintain any internal state itself._)

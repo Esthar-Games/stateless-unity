@@ -1,0 +1,14 @@
+{
+  "name": "com.tool.stateless",
+  "displayName": "Stateless",
+  "version": "5.17.0",
+  "unity": "6000.0",
+  "description": "Lightweight state machine",
+  "keywords": [
+    "state",
+    "machine",
+    "statemachine"
+  ],
+  "license": "Apache 2.0",
+  "hideInEditor": false
+}
