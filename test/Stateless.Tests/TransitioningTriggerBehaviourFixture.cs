@@ -1,14 +1,14 @@
-﻿using Xunit;
+﻿using NUnit.Framework;
 
 namespace Stateless.Tests
 {
     public class TransitioningTriggerBehaviourFixture
     {
-        [Fact]
+        [Test]
         public void TransitionsToDestinationState()
         {
             var transitioning = new StateMachine<State, Trigger>.TransitioningTriggerBehaviour(Trigger.X, State.C, null);
-            Assert.Equal(State.C, transitioning.Destination);
+            Assert.AreEqual(State.C, transitioning.Destination);
         }
     }
 }

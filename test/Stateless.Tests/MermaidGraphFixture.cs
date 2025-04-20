@@ -1,11 +1,12 @@
 ﻿using System.Text;
-using Xunit;
+using NUnit.Framework;
+using Application = UnityEngine.Application;
 
 namespace Stateless.Tests
 {
     public class MermaidGraphFixture
     {
-        [Fact]
+        [Test]
         public void Format_InitialTransition_ShouldReturns()
         {
             var expected = new StringBuilder()
@@ -19,10 +20,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(Format_InitialTransition_ShouldReturns), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void SimpleTransition()
         {
             var expected = new StringBuilder()
@@ -40,10 +41,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(SimpleTransition), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void SimpleTransition_LeftToRight()
         {
             var expected = new StringBuilder()
@@ -62,10 +63,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(SimpleTransition_LeftToRight), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void TwoSimpleTransitions()
         {
             var expected = new StringBuilder()
@@ -85,10 +86,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(TwoSimpleTransitions), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByAnonymousGuard()
         {
             var expected = new StringBuilder()
@@ -109,10 +110,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(WhenDiscriminatedByAnonymousGuard), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByAnonymousGuardWithDescription()
         {
             var expected = new StringBuilder()
@@ -133,10 +134,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(WhenDiscriminatedByAnonymousGuard), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByNamedDelegate()
         {
             var expected = new StringBuilder()
@@ -154,10 +155,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(WhenDiscriminatedByNamedDelegate), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByNamedDelegateWithDescription()
         {
             var expected = new StringBuilder()
@@ -175,10 +176,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(WhenDiscriminatedByNamedDelegateWithDescription), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void DestinationStateIsDynamic()
         {
             var expected = new StringBuilder()
@@ -196,10 +197,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(DestinationStateIsDynamic), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void DestinationStateIsCalculatedBasedOnTriggerParameters()
         {
             var expected = new StringBuilder()
@@ -218,10 +219,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(DestinationStateIsCalculatedBasedOnTriggerParameters), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void TransitionWithIgnore()
         {
             // This test duplicates the behaviour expressed in the TransitionWithIgnore test in DotGraphFixture, 
@@ -243,10 +244,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(TransitionWithIgnore), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void OnEntryWithTriggerParameter()
         {
             var expected = new StringBuilder()
@@ -277,10 +278,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(TransitionWithIgnore), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void SpacedWithSubstate()
         {
             string StateA = "State A";
@@ -324,10 +325,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(SpacedWithSubstate), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void WithSubstate()
         {
             var expected = new StringBuilder()
@@ -357,10 +358,10 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(WithSubstate), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
-        [Fact]
+        [Test]
         public void StateNamesWithSpacesAreAliased()
         {
             var expected = new StringBuilder()
@@ -384,7 +385,7 @@ namespace Stateless.Tests
 
             WriteToFile(nameof(StateNamesWithSpacesAreAliased), result);
 
-            Assert.Equal(expected, result);
+            Assert.AreEqual(expected, result);
         }
 
         private bool IsTrue()
@@ -398,9 +399,9 @@ namespace Stateless.Tests
 
         private void WriteToFile(string fileName, string content)
         {
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(System.IO.Path.Combine("c:\\temp", $"{fileName}.txt"), content);
-#endif
+            string path = Application.dataPath + "/StatelessTests/MermaidGaphs/";
+            System.IO.Directory.CreateDirectory(path);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(path, $"{fileName}.txt"), content);
         }
     }
 }

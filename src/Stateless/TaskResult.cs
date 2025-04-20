@@ -1,16 +1,20 @@
-﻿using System.Threading.Tasks;
+﻿#if TASKS
+using Cysharp.Threading.Tasks;
+
 
 namespace Stateless
 {
     internal static class TaskResult
     {
-        internal static readonly Task Done = FromResult(1);
+        internal static readonly UniTask Done = FromResult(1);
 
-        static Task<T> FromResult<T>(T value)
+        static UniTask<T> FromResult<T>(T value)
         {
-            var tcs = new TaskCompletionSource<T>();
-            tcs.SetResult(value);
+            var tcs = new UniTaskCompletionSource<T>();
+            tcs.TrySetResult(value);
             return tcs.Task;
         }
     }
 }
+
+#endif

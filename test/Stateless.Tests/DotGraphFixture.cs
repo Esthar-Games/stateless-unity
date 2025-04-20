@@ -1,19 +1,20 @@
-﻿// #define WRITE_DOTS_TO_FOLDER
-
+﻿
 using System;
 using System.Collections.Generic;
-using Xunit;
 using Stateless.Reflection;
 using Stateless.Graph;
-using System.Threading.Tasks;
+using NUnit.Framework;
+using UnityEngine;
+
+
+#if TASKS
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace Stateless.Tests
 {
     public class DotGraphFixture
     {
-#if WRITE_DOTS_TO_FOLDER
-        static readonly string DestinationFolder = "c:\\temp\\";
-#endif
 
         bool IsTrue()
         {
@@ -117,7 +118,7 @@ namespace Stateless.Tests
             return s;
         }
 
-        [Fact]
+        [Test]
         public void SimpleTransition()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A") + Box(Style.UML, "B") + Line("A", "B", "X") + suffix;
@@ -129,14 +130,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "SimpleTransition.dot", dotGraph);
-#endif
+            WriteToFile("SimpleTransition.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void SimpleTransitionWithEscaping()
         {
             var state1 = "\\state \"1\"";
@@ -161,14 +160,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "SimpleTransitionWithEscaping.dot", dotGraph);
-#endif
+            WriteToFile("SimpleTransitionWithEscaping.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void TwoSimpleTransitions()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A") + Box(Style.UML, "B") + Box(Style.UML, "C")
@@ -182,10 +179,10 @@ namespace Stateless.Tests
                 .Permit(Trigger.X, State.B)
                 .Permit(Trigger.Y, State.C);
 
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByAnonymousGuard()
         {
             bool anonymousGuard() => true;
@@ -199,10 +196,10 @@ namespace Stateless.Tests
                 .PermitIf(Trigger.X, State.B, anonymousGuard);
             sm.Configure(State.B);
 
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByAnonymousGuardWithDescription()
         {
             bool anonymousGuard() => true;
@@ -219,14 +216,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "WhenDiscriminatedByAnonymousGuardWithDescription.dot", dotGraph);
-#endif
+            WriteToFile("WhenDiscriminatedByAnonymousGuardWithDescription.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByNamedDelegate()
         {
             var expected = Prefix(Style.UML)
@@ -239,10 +234,10 @@ namespace Stateless.Tests
             sm.Configure(State.A)
                 .PermitIf(Trigger.X, State.B, IsTrue);
 
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void WhenDiscriminatedByNamedDelegateWithDescription()
         {
             var expected = Prefix(Style.UML)
@@ -255,10 +250,10 @@ namespace Stateless.Tests
             sm.Configure(State.A)
                 .PermitIf(Trigger.X, State.B, IsTrue, "description");
             sm.Configure(State.B);
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void DestinationStateIsDynamic()
         {
             var expected = Prefix(Style.UML)
@@ -272,14 +267,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "DestinationStateIsDynamic.dot", dotGraph);
-#endif
+            WriteToFile("DestinationStateIsDynamic.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
-
-        [Fact]
+#if TASKS
+        [Test]
         public void DestinationStateIsDynamicAsync()
         {
             var expected = Prefix(Style.UML)
@@ -289,18 +282,16 @@ namespace Stateless.Tests
 
             var sm = new StateMachine<State, Trigger>(State.A);
             sm.Configure(State.A)
-                .PermitDynamicAsync(Trigger.X, () => Task.FromResult(State.B));
+                .PermitDynamicAsync(Trigger.X, () => UniTask.FromResult(State.B));
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "DestinationStateIsDynamic.dot", dotGraph);
-#endif
+            WriteToFile("DestinationStateIsDynamic.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
-
-        [Fact]
+#endif
+        [Test]
         public void DestinationStateIsCalculatedBasedOnTriggerParameters()
         {
             var expected = Prefix(Style.UML)
@@ -315,13 +306,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "DestinationStateIsCalculatedBasedOnTriggerParameters.dot", dotGraph);
-#endif
-            Assert.Equal(expected, dotGraph);
-        }
+            WriteToFile("DestinationStateIsCalculatedBasedOnTriggerParameters.dot", dotGraph);
 
-        [Fact]
+            Assert.AreEqual(expected, dotGraph);
+        }
+#if TASKS
+        [Test]
         public void DestinationStateIsCalculatedBasedOnTriggerParametersAsync()
         {
             var expected = Prefix(Style.UML)
@@ -332,17 +322,16 @@ namespace Stateless.Tests
             var sm = new StateMachine<State, Trigger>(State.A);
             var trigger = sm.SetTriggerParameters<int>(Trigger.X);
             sm.Configure(State.A)
-                .PermitDynamicAsync(trigger, i => Task.FromResult(i == 1 ? State.B : State.C));
+                .PermitDynamicAsync(trigger, i => UniTask.FromResult(i == 1 ? State.B : State.C));
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "DestinationStateIsCalculatedBasedOnTriggerParameters.dot", dotGraph);
-#endif
-            Assert.Equal(expected, dotGraph);
-        }
+            WriteToFile("DestinationStateIsCalculatedBasedOnTriggerParameters.dot", dotGraph);
 
-        [Fact]
+            Assert.AreEqual(expected, dotGraph);
+        }
+#endif
+        [Test]
         public void OnEntryWithAnonymousActionAndDescription()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A", new List<string> { "enteredA" }) + suffix;
@@ -354,14 +343,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "OnEntryWithAnonymousActionAndDescription.dot", dotGraph);
-#endif
+            WriteToFile("OnEntryWithAnonymousActionAndDescription.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void OnEntryWithNamedDelegateActionAndDescription()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A", new List<string> { "enteredA" }) + suffix;
@@ -371,10 +358,10 @@ namespace Stateless.Tests
             sm.Configure(State.A)
                 .OnEntry(OnEntry, "enteredA");
 
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void OnExitWithAnonymousActionAndDescription()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A", null, new List<string> { "exitA" }) + suffix;
@@ -384,10 +371,10 @@ namespace Stateless.Tests
             sm.Configure(State.A)
                 .OnExit(() => { }, "exitA");
 
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void OnExitWithNamedDelegateActionAndDescription()
         {
 
@@ -397,12 +384,12 @@ namespace Stateless.Tests
                 .OnExit(OnExit, "exitA");
 
             var expected = Prefix(Style.UML) + Box(Style.UML, "A", null, new List<string> { "exitA" }) + suffix;
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
             expected = Prefix(Style.UML) + Box(Style.UML, "A", null, new List<string> { "exitA" }) + suffix;
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void TransitionWithIgnore()
         {
             // Ignored triggers do not appear in the graph
@@ -418,10 +405,10 @@ namespace Stateless.Tests
                 .Ignore(Trigger.Y)
                 .Permit(Trigger.X, State.B);
 
-            Assert.Equal(expected, UmlDotGraph.Format(sm.GetInfo()));
+            Assert.AreEqual(expected, UmlDotGraph.Format(sm.GetInfo()));
         }
 
-        [Fact]
+        [Test]
         public void OnEntryWithTriggerParameter()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A", new List<string> { "OnEntry" })
@@ -448,14 +435,13 @@ namespace Stateless.Tests
                 .OnEntryFrom(parmTrig, TestEntryActionString);
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "OnEntryWithTriggerParameter.dot", dotGraph);
-#endif
 
-            Assert.Equal(expected, dotGraph);
+            WriteToFile("OnEntryWithTriggerParameter.dot", dotGraph);
+
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void SpacedUmlWithSubstate()
         {
             string StateA = "State \"A\"";
@@ -496,14 +482,13 @@ namespace Stateless.Tests
                 .OnEntry(TestEntryAction, EnterD);
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "SpacedUmlWithSubstate.dot", dotGraph);
-#endif
 
-            Assert.Equal(expected, dotGraph);
+            WriteToFile("SpacedUmlWithSubstate.dot", dotGraph);
+
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void UmlWithSubstate()
         {
             var expected = Prefix(Style.UML)
@@ -530,14 +515,13 @@ namespace Stateless.Tests
                 .OnEntry(TestEntryAction, "EnterD");
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "UmlWithSubstate.dot", dotGraph);
-#endif
 
-            Assert.Equal(expected, dotGraph);
+            WriteToFile("UmlWithSubstate.dot", dotGraph);
+
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void UmlWithDynamic()
         {
             var expected = Prefix(Style.UML)
@@ -559,14 +543,13 @@ namespace Stateless.Tests
             sm.Configure(State.C);
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "UmlWithDynamic.dot", dotGraph);
-#endif
 
-            Assert.Equal(expected, dotGraph);
+            WriteToFile("UmlWithDynamic.dot", dotGraph);
+
+            Assert.AreEqual(expected, dotGraph);
         }
-
-        [Fact]
+#if TASKS
+        [Test]
         public void UmlWithDynamicAsync()
         {
             var expected = Prefix(Style.UML)
@@ -582,20 +565,19 @@ namespace Stateless.Tests
             var sm = new StateMachine<State, Trigger>(State.A);
 
             sm.Configure(State.A)
-                .PermitDynamicAsync(Trigger.X, () => Task.FromResult(DestinationSelector()), null, new DynamicStateInfos { { State.B, "ChoseB" }, { State.C, "ChoseC" } });
+                .PermitDynamicAsync(Trigger.X, () => UniTask.FromResult(DestinationSelector()), null, new DynamicStateInfos { { State.B, "ChoseB" }, { State.C, "ChoseC" } });
 
             sm.Configure(State.B);
             sm.Configure(State.C);
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "UmlWithDynamic.dot", dotGraph);
-#endif
 
-            Assert.Equal(expected, dotGraph);
+            WriteToFile("UmlWithDynamic.dot", dotGraph);
+
+            Assert.AreEqual(expected, dotGraph);
         }
-
-        [Fact]
+#endif
+        [Test]
         public void TransitionWithIgnoreAndEntry()
         {
             var expected = Prefix(Style.UML)
@@ -619,14 +601,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "TransitionWithIgnoreAndEntry.dot", dotGraph);
-#endif
+            WriteToFile("TransitionWithIgnoreAndEntry.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void Internal_Transition_Does_Not_Show_Entry_Exit_Functions()
         {
             var expected = Prefix(Style.UML)
@@ -643,14 +623,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "Internal_Transition_Does_Not_Show_Entry_Exit_Functions.dot", dotGraph);
-#endif
+            WriteToFile("Internal_Transition_Does_Not_Show_Entry_Exit_Functions.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void Initial_State_Not_Changed_After_Trigger_Fired()
         {
             var expected = Prefix(Style.UML) + Box(Style.UML, "A") + Box(Style.UML, "B") + Line("A", "B", "X") + suffix;
@@ -664,14 +642,12 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "SimpleTransition.dot", dotGraph);
-#endif
+            WriteToFile("SimpleTransition.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void Reentrant_Transition_Shows_Entry_Action_When_Action_Is_Configured_With_OnEntryFrom()
         {
             var expected = Prefix(Style.UML)
@@ -693,14 +669,13 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "Reentrant_Transition_Shows_Entry_Action_When_Action_Is_Configured_With_OnEntryFrom.dot", dotGraph);
-#endif
 
-            Assert.Equal(expected, dotGraph);
+            WriteToFile("Reentrant_Transition_Shows_Entry_Action_When_Action_Is_Configured_With_OnEntryFrom.dot", dotGraph);
+
+            Assert.AreEqual(expected, dotGraph);
         }
 
-        [Fact]
+        [Test]
         public void Reentrant_Transition_Shows_Entry_Action_When_Action_Is_Configured_With_OnEntryFrom_And_Trigger_Has_Parameter()
         {
             var expected = Prefix(Style.UML)
@@ -723,11 +698,16 @@ namespace Stateless.Tests
 
             string dotGraph = UmlDotGraph.Format(sm.GetInfo());
 
-#if WRITE_DOTS_TO_FOLDER
-            System.IO.File.WriteAllText(DestinationFolder + "Reentrant_Transition_Shows_Entry_Action_When_Action_Is_Configured_With_OnEntryFrom_And_Trigger_Has_Parameter.dot", dotGraph);
-#endif
+            WriteToFile("Reentrant_Transition_Shows_Entry_Action_When_Action_Is_Configured_With_OnEntryFrom_And_Trigger_Has_Parameter.dot", dotGraph);
 
-            Assert.Equal(expected, dotGraph);
+            Assert.AreEqual(expected, dotGraph);
+        }
+
+        private void WriteToFile(string fileName, string content)
+        {
+            string path = Application.dataPath + "/StatelessTests/DotGaphs/";
+            System.IO.Directory.CreateDirectory(path);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(path, $"{fileName}.txt"), content);
         }
 
         private void TestEntryAction() { }

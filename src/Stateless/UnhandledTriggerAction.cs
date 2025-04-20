@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+
+#if TASKS
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace Stateless
 {
@@ -9,8 +12,10 @@ namespace Stateless
         abstract class UnhandledTriggerAction
         {
             public abstract void Execute(TState state, TTrigger trigger, ICollection<string> unmetGuards);
-            public abstract Task ExecuteAsync(TState state, TTrigger trigger, ICollection<string> unmetGuards);
 
+#if TASKS
+            public abstract UniTask ExecuteAsync(TState state, TTrigger trigger, ICollection<string> unmetGuards);
+#endif
             internal class Sync : UnhandledTriggerAction
             {
                 readonly Action<TState, TTrigger, ICollection<string>> _action;
@@ -24,19 +29,20 @@ namespace Stateless
                 {
                     _action(state, trigger, unmetGuards);
                 }
-
-                public override Task ExecuteAsync(TState state, TTrigger trigger, ICollection<string> unmetGuards)
+#if TASKS
+                public override UniTask ExecuteAsync(TState state, TTrigger trigger, ICollection<string> unmetGuards)
                 {
                     Execute(state, trigger, unmetGuards);
-                    return TaskResult.Done;
+                    return UniTask.CompletedTask;
                 }
+#endif
             }
-
+#if TASKS
             internal class Async : UnhandledTriggerAction
             {
-                readonly Func<TState, TTrigger, ICollection<string>, Task> _action;
+                readonly Func<TState, TTrigger, ICollection<string>, UniTask> _action;
 
-                internal Async(Func<TState, TTrigger, ICollection<string>, Task> action)
+                internal Async(Func<TState, TTrigger, ICollection<string>, UniTask> action)
                 {
                     _action = action;
                 }
@@ -48,11 +54,12 @@ namespace Stateless
                         "Use asynchronous version of Fire [FireAsync]");
                 }
 
-                public override Task ExecuteAsync(TState state, TTrigger trigger, ICollection<string> unmetGuards)
+                public override UniTask ExecuteAsync(TState state, TTrigger trigger, ICollection<string> unmetGuards)
                 {
                     return _action(state, trigger, unmetGuards);
                 }
             }
+#endif
         }
     }
 }

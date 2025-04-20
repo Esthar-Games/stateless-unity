@@ -1,12 +1,14 @@
-﻿using System;
+﻿#if TASKS
+using System;
+using Cysharp.Threading.Tasks;
 using System.Threading.Tasks;
-using Xunit;
+using NUnit.Framework;
 
 namespace Stateless.Tests
 {
     public class InternalTransitionAsyncFixture
     {
-        [Fact]
+        [Test]
         public async Task InternalTransitionAsyncIf_AllowGuardWithParameter()
         {
             var sm = new StateMachine<State, Trigger>(State.A);
@@ -19,13 +21,13 @@ namespace Stateless.Tests
                 .InternalTransitionAsyncIf(trigger, i =>
                 {
                     guardInvoked = true;
-                    Assert.Equal(intParam, i);
+                    Assert.AreEqual(intParam, i);
                     return true;
                 }, (i, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam);
@@ -34,7 +36,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
     
-        [Fact]
+        [Test]
         public async Task InternalTransitionAsyncIf_AllowGuardWithTwoParameters()
         {
             var sm = new StateMachine<State, Trigger>(State.A);
@@ -48,15 +50,15 @@ namespace Stateless.Tests
                 .InternalTransitionAsyncIf(trigger, (i, s) =>
                 {
                     guardInvoked = true;
-                    Assert.Equal(intParam, i);
-                    Assert.Equal(stringParam, s);
+                    Assert.AreEqual(intParam, i);
+                    Assert.AreEqual(stringParam, s);
                     return true;
                 }, (i, s, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    Assert.Equal(stringParam, s);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    Assert.AreEqual(stringParam, s);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam, stringParam);
@@ -65,7 +67,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
     
-        [Fact]
+        [Test]
         public async Task InternalTransitionAsyncIf_AllowGuardWithThreeParameters()
         {
             var sm = new StateMachine<State, Trigger>(State.A);
@@ -80,17 +82,17 @@ namespace Stateless.Tests
                 .InternalTransitionAsyncIf(trigger, (i, s, b) =>
                 {
                     guardInvoked = true;
-                    Assert.Equal(intParam, i);
-                    Assert.Equal(stringParam, s);
-                    Assert.Equal(boolParam, b);
+                    Assert.AreEqual(intParam, i);
+                    Assert.AreEqual(stringParam, s);
+                    Assert.AreEqual(boolParam, b);
                     return true;
                 }, (i, s, b, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    Assert.Equal(stringParam, s);
-                    Assert.Equal(boolParam, b);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    Assert.AreEqual(stringParam, s);
+                    Assert.AreEqual(boolParam, b);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam, stringParam, boolParam);
@@ -99,7 +101,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
 
-        [Fact]
+        [Test]
         [Obsolete]
         public async Task InternalTransitionAsyncIf_DeprecatedOverload_AllowGuardWithoutParameter()
         {
@@ -117,8 +119,8 @@ namespace Stateless.Tests
                 }, (i, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam);
@@ -127,7 +129,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
 
-        [Fact]
+        [Test]
         [Obsolete]
         public async Task InternalTransitionAsyncIf_DeprecatedOverload_AllowGuardWithParameter()
         {
@@ -145,8 +147,8 @@ namespace Stateless.Tests
                 }, (i, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam);
@@ -155,7 +157,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
 
-        [Fact]
+        [Test]
         [Obsolete]
         public async Task InternalTransitionAsyncIf_DeprecatedOverload_AllowGuardWithTwoParameters()
         {
@@ -174,9 +176,9 @@ namespace Stateless.Tests
                 }, (i, s, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    Assert.Equal(stringParam, s);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    Assert.AreEqual(stringParam, s);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam, stringParam);
@@ -185,7 +187,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
 
-        [Fact]
+        [Test]
         [Obsolete]
         public async Task InternalTransitionAsyncIf_DeprecatedOverload_AllowGuardWithThreeParameters()
         {
@@ -205,10 +207,10 @@ namespace Stateless.Tests
                 }, (i, s, b, transition) =>
                 {
                     callbackInvoked = true;
-                    Assert.Equal(intParam, i);
-                    Assert.Equal(stringParam, s);
-                    Assert.Equal(boolParam, b);
-                    return Task.CompletedTask;
+                    Assert.AreEqual(intParam, i);
+                    Assert.AreEqual(stringParam, s);
+                    Assert.AreEqual(boolParam, b);
+                    return UniTask.CompletedTask;
                 });
 
             await sm.FireAsync(trigger, intParam, stringParam, boolParam);
@@ -217,7 +219,7 @@ namespace Stateless.Tests
             Assert.True(callbackInvoked);
         }
 
-        [Fact]
+        [Test]
         [Obsolete]
         public async Task InternalTransitionAsyncIf_DeprecatedOverload_GuardExecutedOnlyOnce()
         {
@@ -235,13 +237,13 @@ namespace Stateless.Tests
 
             await stateMachine.FireAsync(OrderStateTrigger.PaymentCompleted);
 
-            Assert.Equal(1, guardCalls);
+            Assert.AreEqual(1, guardCalls);
         }
 
         /// <summary>
         /// This unit test demonstrated bug report #417
         /// </summary>
-        [Fact]
+        [Test]
         public async Task InternalTransitionAsyncIf_GuardExecutedOnlyOnce()
         {
             var guardCalls = 0;
@@ -258,7 +260,7 @@ namespace Stateless.Tests
 
             await stateMachine.FireAsync(OrderStateTrigger.PaymentCompleted);
 
-            Assert.Equal(1, guardCalls);
+            Assert.AreEqual(1, guardCalls);
         }
 
         private bool PreCondition(ref int calls)
@@ -267,9 +269,9 @@ namespace Stateless.Tests
             return true;
         }
 
-        private async Task ChangePaymentState(Order order, PaymentStatus paymentStatus)
+        private async UniTask ChangePaymentState(Order order, PaymentStatus paymentStatus)
         {
-            await Task.FromResult(order.PaymentStatus = paymentStatus);
+            await UniTask.FromResult(order.PaymentStatus = paymentStatus);
         }
 
         private enum OrderStatus { OrderPlaced }
@@ -282,3 +284,4 @@ namespace Stateless.Tests
         }
     }
 }
+#endif

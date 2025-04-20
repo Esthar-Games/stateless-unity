@@ -1,5 +1,5 @@
 ﻿using Stateless.Reflection;
-using Xunit;
+using NUnit.Framework;
 
 namespace Stateless.Tests
 {
@@ -10,7 +10,7 @@ namespace Stateless.Tests
         /// However, for StateMachineInfo.InitialState, this never happens. Therefore StateMachineInfo.InitialState.Transitions
         /// throws a System.ArgumentNullException. 
         /// </summary>
-        [Fact]
+        [Test]
         public void StateInfo_transitions_should_default_to_empty()
         {
             // ARRANGE

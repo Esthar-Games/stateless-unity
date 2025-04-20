@@ -1,5 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿#if TASKS
+
+using System;
+using Cysharp.Threading.Tasks;
 
 namespace Stateless
 {
@@ -7,10 +9,10 @@ namespace Stateless
     {
         internal class DynamicTriggerBehaviourAsync : TriggerBehaviour
         {
-            readonly Func<object[], Task<TState>> _destination;
+            readonly Func<object[], UniTask<TState>> _destination;
             internal Reflection.DynamicTransitionInfo TransitionInfo { get; private set; }
 
-            public DynamicTriggerBehaviourAsync(TTrigger trigger, Func<object[], Task<TState>> destination,
+            public DynamicTriggerBehaviourAsync(TTrigger trigger, Func<object[], UniTask<TState>> destination,
                 TransitionGuard transitionGuard, Reflection.DynamicTransitionInfo info)
                 : base(trigger, transitionGuard)
             {
@@ -18,10 +20,11 @@ namespace Stateless
                 TransitionInfo = info ?? throw new ArgumentNullException(nameof(info));
             }
 
-            public async Task<TState> GetDestinationState(TState source, object[] args)
+            public async UniTask<TState> GetDestinationState(TState source, object[] args)
             {
                return await _destination(args);
             }
         }
     }
 }
+#endif

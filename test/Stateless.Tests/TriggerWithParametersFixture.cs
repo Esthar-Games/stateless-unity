@@ -1,49 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
+#if TASKS
+using Cysharp.Threading.Tasks;
+#endif
+using NUnit.Framework;
 
 namespace Stateless.Tests
 {
     public class TriggerWithParametersFixture
     {
-        [Fact]
+        [Test]
         public void DescribesUnderlyingTrigger()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<string>(Trigger.X);
-            Assert.Equal(Trigger.X, twp.Trigger);
+            Assert.AreEqual(Trigger.X, twp.Trigger);
         }
 
-        [Fact]
+        [Test]
         public void ParametersOfCorrectTypeAreAccepted()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<string>(Trigger.X);
             twp.ValidateParameters(new[] { "arg" });
         }
 
-        [Fact]
+        [Test]
         public void ParametersArePolymorphic()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<object>(Trigger.X);
             twp.ValidateParameters(new[] { "arg" });
         }
 
-        [Fact]
+        [Test]
         public void IncompatibleParametersAreNotValid()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<string>(Trigger.X);
             Assert.Throws<ArgumentException>(() => twp.ValidateParameters(new object[] { 123 }));
         }
 
-        [Fact]
+        [Test]
         public void TooFewParametersDetected()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<string, string>(Trigger.X);
             Assert.Throws<ArgumentException>(() => twp.ValidateParameters(new[] { "a" }));
         }
 
-        [Fact]
+        [Test]
         public void TooManyParametersDetected()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<string, string>(Trigger.X);
@@ -53,7 +55,7 @@ namespace Stateless.Tests
         /// <summary>
         /// issue #380 - default params on PermitIfDynamic lead to ambiguity at compile time... explicits work properly.
         /// </summary>
-        [Fact]
+        [Test]
         public void StateParameterIsNotAmbiguous()
         {
             var fsm = new StateMachine<State, Trigger>(State.A);
@@ -62,61 +64,61 @@ namespace Stateless.Tests
             fsm.Configure(State.A)
                 .PermitDynamicIf(pressTrigger, state => state);
         }
-
+#if TASKS
         /// <summary>
         /// issue #380 - default params on PermitIfDynamic lead to ambiguity at compile time... explicits work properly.
         /// </summary>
-        [Fact]
+        [Test]
         public void StateParameterIsNotAmbiguousAsync()
         {
             var fsm = new StateMachine<State, Trigger>(State.A);
             StateMachine<State, Trigger>.TriggerWithParameters<State> pressTrigger = fsm.SetTriggerParameters<State>(Trigger.X);
 
             fsm.Configure(State.A)
-                .PermitDynamicIfAsync(pressTrigger, state => Task.FromResult(state));
+                .PermitDynamicIfAsync(pressTrigger, state => UniTask.FromResult(state));
         }
-
-        [Fact]
+#endif
+        [Test]
         public void IncompatibleParameterListIsNotValid()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters(Trigger.X, new Type[] { typeof(int), typeof(string) });
             Assert.Throws<ArgumentException>(() => twp.ValidateParameters(new object[] { 123 }));
         }
 
-        [Fact]
+        [Test]
         public void ParameterListOfCorrectTypeAreAccepted()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters(Trigger.X, new Type[] { typeof(int), typeof(string) });
             twp.ValidateParameters(new object[] { 123, "arg" });
         }
 
-        [Fact]
+        [Test]
         public void Arguments_Returs_Single_Argument()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<int>(Trigger.X);
-            Assert.Single(twp.ArgumentTypes);
-            Assert.Equal(typeof(int), twp.ArgumentTypes.First());
+            Assert.That(twp.ArgumentTypes.ToList(), Has.Count.EqualTo(1));   
+            Assert.AreEqual(typeof(int), twp.ArgumentTypes.First());
         }
 
-        [Fact]
+        [Test]
         public void Arguments_Returs_Two_Arguments()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<int, string>(Trigger.X);
             var args = twp.ArgumentTypes.ToList();
-            Assert.Equal(2, args.Count);
-            Assert.Equal(typeof(int), args[0]);
-            Assert.Equal(typeof(string), args[1]);
+            Assert.AreEqual(2, args.Count);
+            Assert.AreEqual(typeof(int), args[0]);
+            Assert.AreEqual(typeof(string), args[1]);
         }
 
-        [Fact]
+        [Test]
         public void Arguments_Returs_Three_Arguments()
         {
             var twp = new StateMachine<State, Trigger>.TriggerWithParameters<int, string, List<bool>>(Trigger.X);
             var args = twp.ArgumentTypes.ToList();
-            Assert.Equal(3, args.Count);
-            Assert.Equal(typeof(int), args[0]);
-            Assert.Equal(typeof(string), args[1]);
-            Assert.Equal(typeof(List<bool>), args[2]);
+            Assert.AreEqual(3, args.Count);
+            Assert.AreEqual(typeof(int), args[0]);
+            Assert.AreEqual(typeof(string), args[1]);
+            Assert.AreEqual(typeof(List<bool>), args[2]);
         }
     }
 }

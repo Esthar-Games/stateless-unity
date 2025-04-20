@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+
+#if TASKS
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace Stateless
 {
@@ -9,25 +12,28 @@ namespace Stateless
         class OnTransitionedEvent
         {
             event Action<Transition> _onTransitioned;
-            readonly List<Func<Transition, Task>> _onTransitionedAsync = new List<Func<Transition, Task>>();
-            
+#if TASKS
+            readonly List<Func<Transition, UniTask>> _onTransitionedAsync = new List<Func<Transition, UniTask>>();
+#endif
+
             public void Invoke(Transition transition)
             {
+#if TASKS
                 if (_onTransitionedAsync.Count != 0)
                     throw new InvalidOperationException(
                         "Cannot execute asynchronous action specified as OnTransitioned callback. " +
                         "Use asynchronous version of Fire [FireAsync]");
-
+#endif
                 _onTransitioned?.Invoke(transition);
             }
 
 #if TASKS
-            public async Task InvokeAsync(Transition transition, bool retainSynchronizationContext)
+            public async UniTask InvokeAsync(Transition transition)
             {
                 _onTransitioned?.Invoke(transition);
 
                 foreach (var callback in _onTransitionedAsync)
-                    await callback(transition).ConfigureAwait(retainSynchronizationContext);
+                    await callback(transition);
             }
 #endif
 
@@ -35,11 +41,12 @@ namespace Stateless
             {
                 _onTransitioned += action;
             }
-
-            public void Register(Func<Transition, Task> action)
+#if TASKS
+            public void Register(Func<Transition, UniTask> action)
             {
                 _onTransitionedAsync.Add(action);
             }
+#endif
         }
     }
 }

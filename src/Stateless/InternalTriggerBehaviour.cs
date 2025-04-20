@@ -1,5 +1,8 @@
 ﻿using System;
-using System.Threading.Tasks;
+
+#if TASKS
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace Stateless
 {
@@ -12,7 +15,10 @@ namespace Stateless
             }
 
             public abstract void Execute(Transition transition, object[] args);
-            public abstract Task ExecuteAsync(Transition transition, object[] args);
+
+#if TASKS
+            public abstract UniTask ExecuteAsync(Transition transition, object[] args);
+#endif
 
             public class Sync : InternalTriggerBehaviour
             {
@@ -27,25 +33,26 @@ namespace Stateless
                 {
                     InternalAction(transition, args);
                 }
-
-                public override Task ExecuteAsync(Transition transition, object[] args)
+#if TASKS
+                public override UniTask ExecuteAsync(Transition transition, object[] args)
                 {
                     Execute(transition, args);
                     return TaskResult.Done;
                 }
+#endif
             }
-
+#if TASKS
             public class Async : InternalTriggerBehaviour
             {
-                readonly Func<Transition, object[], Task> InternalAction;
+                readonly Func<Transition, object[], UniTask> InternalAction;
 
-                public Async(TTrigger trigger, Func<object[], bool> guard, Func<Transition, object[], Task> internalAction, string guardDescription = null) : base(trigger, new TransitionGuard(guard, guardDescription))
+                public Async(TTrigger trigger, Func<object[], bool> guard, Func<Transition, object[], UniTask> internalAction, string guardDescription = null) : base(trigger, new TransitionGuard(guard, guardDescription))
                 {
                     InternalAction = internalAction;
                 }
 
                 [Obsolete]
-                public Async(TTrigger trigger, Func<bool> guard, Func<Transition, object[], Task> internalAction, string guardDescription = null) : base(trigger, new TransitionGuard(guard, guardDescription))
+                public Async(TTrigger trigger, Func<bool> guard, Func<Transition, object[], UniTask> internalAction, string guardDescription = null) : base(trigger, new TransitionGuard(guard, guardDescription))
                 {
                     InternalAction = internalAction;
                 }
@@ -57,11 +64,12 @@ namespace Stateless
                          "Use asynchronous version of Fire [FireAsync]");
                 }
 
-                public override Task ExecuteAsync(Transition transition, object[] args)
+                public override UniTask ExecuteAsync(Transition transition, object[] args)
                 {
                     return InternalAction(transition, args);
                 }
             }
+#endif
         }
     }
 }

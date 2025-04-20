@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace Stateless
 {
@@ -15,7 +15,7 @@ namespace Stateless
         /// will be invoked. The activation is idempotent and subsequent activation of the same current state 
         /// will not lead to re-execution of activation callbacks.
         /// </summary>
-        public Task ActivateAsync()
+        public UniTask ActivateAsync()
         {
             var representativeState = GetRepresentation(State);
             return representativeState.ActivateAsync();
@@ -26,7 +26,7 @@ namespace Stateless
         /// will be invoked. The deactivation is idempotent and subsequent deactivation of the same current state 
         /// will not lead to re-execution of deactivation callbacks.
         /// </summary>
-        public Task DeactivateAsync()
+        public UniTask DeactivateAsync()
         {
             var representativeState = GetRepresentation(State);
             return representativeState.DeactivateAsync();
@@ -41,7 +41,7 @@ namespace Stateless
         /// <param name="trigger">The trigger to fire.</param>
         /// <exception cref="System.InvalidOperationException">The current state does
         /// not allow the trigger to be fired.</exception>
-        public Task FireAsync(TTrigger trigger)
+        public UniTask FireAsync(TTrigger trigger)
         {
             return InternalFireAsync(trigger, new object[0]);
         }
@@ -54,7 +54,7 @@ namespace Stateless
         /// </summary>
         /// <param name="trigger">The trigger to fire.</param>
         /// <param name="args">A variable-length parameters list containing arguments. </param>
-        public Task FireAsync(TTrigger trigger, params object[] args)
+        public UniTask FireAsync(TTrigger trigger, params object[] args)
         {
             return InternalFireAsync(trigger, args);
         }
@@ -69,7 +69,7 @@ namespace Stateless
         /// <param name="args">A variable-length parameters list containing arguments. </param>
         /// <exception cref="System.InvalidOperationException">The current state does
         /// not allow the trigger to be fired.</exception>
-        public Task FireAsync(TriggerWithParameters trigger, params object[] args)
+        public UniTask FireAsync(TriggerWithParameters trigger, params object[] args)
         {
             if (trigger == null) throw new ArgumentNullException(nameof(trigger));
 
@@ -87,7 +87,7 @@ namespace Stateless
         /// <param name="arg0">The first argument.</param>
         /// <exception cref="System.InvalidOperationException">The current state does
         /// not allow the trigger to be fired.</exception>
-        public Task FireAsync<TArg0>(TriggerWithParameters<TArg0> trigger, TArg0 arg0)
+        public UniTask FireAsync<TArg0>(TriggerWithParameters<TArg0> trigger, TArg0 arg0)
         {
             if (trigger == null) throw new ArgumentNullException(nameof(trigger));
 
@@ -107,7 +107,7 @@ namespace Stateless
         /// <param name="trigger">The trigger to fire.</param>
         /// <exception cref="System.InvalidOperationException">The current state does
         /// not allow the trigger to be fired.</exception>
-        public Task FireAsync<TArg0, TArg1>(TriggerWithParameters<TArg0, TArg1> trigger, TArg0 arg0, TArg1 arg1)
+        public UniTask FireAsync<TArg0, TArg1>(TriggerWithParameters<TArg0, TArg1> trigger, TArg0 arg0, TArg1 arg1)
         {
             if (trigger == null) throw new ArgumentNullException(nameof(trigger));
 
@@ -129,7 +129,7 @@ namespace Stateless
         /// <param name="trigger">The trigger to fire.</param>
         /// <exception cref="System.InvalidOperationException">The current state does
         /// not allow the trigger to be fired.</exception>
-        public Task FireAsync<TArg0, TArg1, TArg2>(TriggerWithParameters<TArg0, TArg1, TArg2> trigger, TArg0 arg0, TArg1 arg1, TArg2 arg2)
+        public UniTask FireAsync<TArg0, TArg1, TArg2>(TriggerWithParameters<TArg0, TArg1, TArg2> trigger, TArg0 arg0, TArg1 arg1, TArg2 arg2)
         {
             if (trigger == null) throw new ArgumentNullException(nameof(trigger));
 
@@ -141,7 +141,7 @@ namespace Stateless
         /// </summary>
         /// <param name="trigger">The trigger. </param>
         /// <param name="args">A variable-length parameters list containing arguments. </param>
-        async Task InternalFireAsync(TTrigger trigger, params object[] args)
+        async UniTask InternalFireAsync(TTrigger trigger, params object[] args)
         {
             switch (_firingMode)
             {
@@ -163,7 +163,7 @@ namespace Stateless
         /// </summary>
         /// <param name="trigger">  The trigger. </param>
         /// <param name="args">     A variable-length parameters list containing arguments. </param>
-        async Task InternalFireQueuedAsync(TTrigger trigger, params object[] args)
+        async UniTask InternalFireQueuedAsync(TTrigger trigger, params object[] args)
         {
             if (_firing)
             {
@@ -175,12 +175,12 @@ namespace Stateless
             {
                 _firing = true;
 
-                await InternalFireOneAsync(trigger, args).ConfigureAwait(RetainSynchronizationContext);
+                await InternalFireOneAsync(trigger, args);
 
                 while (_eventQueue.Count != 0)
                 {
                     var queuedEvent = _eventQueue.Dequeue();
-                    await InternalFireOneAsync(queuedEvent.Trigger, queuedEvent.Args).ConfigureAwait(RetainSynchronizationContext);
+                    await InternalFireOneAsync(queuedEvent.Trigger, queuedEvent.Args);
                 }
             }
             finally
@@ -189,7 +189,7 @@ namespace Stateless
             }
         }
 
-        async Task InternalFireOneAsync(TTrigger trigger, params object[] args)
+        async UniTask InternalFireOneAsync(TTrigger trigger, params object[] args)
         {
             // If this is a trigger with parameters, we must validate the parameter(s)
             if (_triggerConfiguration.TryGetValue(trigger, out TriggerWithParameters configuration))
@@ -257,11 +257,7 @@ namespace Stateless
                         if (itb is InternalTriggerBehaviour.Async ita)
                             await ita.ExecuteAsync(transition, args);
                         else
-                            if (RetainSynchronizationContext)
-                                await Task.Factory.StartNew(() => itb.Execute(transition, args),
-                                    CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.FromCurrentSynchronizationContext());
-                            else
-                                await Task.Run(() => itb.Execute(transition, args));
+                                itb.Execute(transition, args);
                         break;
                     }
                 default:
@@ -269,7 +265,7 @@ namespace Stateless
             }
         }
 
-        private async Task HandleReentryTriggerAsync(object[] args, StateRepresentation representativeState, Transition transition)
+        private async UniTask HandleReentryTriggerAsync(object[] args, StateRepresentation representativeState, Transition transition)
         {
             StateRepresentation representation;
             transition = await representativeState.ExitAsync(transition);
@@ -281,20 +277,20 @@ namespace Stateless
                 transition = new Transition(transition.Destination, transition.Destination, transition.Trigger, args);
                 await newRepresentation.ExitAsync(transition);
 
-                await _onTransitionedEvent.InvokeAsync(transition, RetainSynchronizationContext);
+                await _onTransitionedEvent.InvokeAsync(transition);
                 representation = await EnterStateAsync(newRepresentation, transition, args);
-                await _onTransitionCompletedEvent.InvokeAsync(transition, RetainSynchronizationContext);
+                await _onTransitionCompletedEvent.InvokeAsync(transition);
             }
             else
             {
-                await _onTransitionedEvent.InvokeAsync(transition, RetainSynchronizationContext);
+                await _onTransitionedEvent.InvokeAsync(transition);
                 representation = await EnterStateAsync(newRepresentation, transition, args);
-                await _onTransitionCompletedEvent.InvokeAsync(transition, RetainSynchronizationContext);
+                await _onTransitionCompletedEvent.InvokeAsync(transition);
             }
             State = representation.UnderlyingState;
         }
 
-        private async Task HandleTransitioningTriggerAsync(object[] args, StateRepresentation representativeState, Transition transition)
+        private async UniTask HandleTransitioningTriggerAsync(object[] args, StateRepresentation representativeState, Transition transition)
         {
             transition = await representativeState.ExitAsync(transition);
 
@@ -302,7 +298,7 @@ namespace Stateless
             var newRepresentation = GetRepresentation(transition.Destination);
 
             //Alert all listeners of state transition
-            await _onTransitionedEvent.InvokeAsync(transition, RetainSynchronizationContext);
+            await _onTransitionedEvent.InvokeAsync(transition);
             var representation =await EnterStateAsync(newRepresentation, transition, args);
 
             // Check if state has changed by entering new state (by firing triggers in OnEntry or such)
@@ -312,11 +308,11 @@ namespace Stateless
                 State = representation.UnderlyingState;
             }
 
-            await _onTransitionCompletedEvent.InvokeAsync(new Transition(transition.Source, State, transition.Trigger, transition.Parameters), RetainSynchronizationContext);
+            await _onTransitionCompletedEvent.InvokeAsync(new Transition(transition.Source, State, transition.Trigger, transition.Parameters));
         }
 
 
-        private async Task<StateRepresentation> EnterStateAsync(StateRepresentation representation, Transition transition, object[] args)
+        private async UniTask<StateRepresentation> EnterStateAsync(StateRepresentation representation, Transition transition, object[] args)
         {
             // Enter the new state
             await representation.EnterAsync(transition, args);
@@ -343,7 +339,7 @@ namespace Stateless
                 representation = GetRepresentation(representation.InitialTransitionTarget);
 
                 // Alert all listeners of initial state transition
-                await _onTransitionedEvent.InvokeAsync(new Transition(transition.Destination, initialTransition.Destination, transition.Trigger, transition.Parameters), RetainSynchronizationContext);
+                await _onTransitionedEvent.InvokeAsync(new Transition(transition.Destination, initialTransition.Destination, transition.Trigger, transition.Parameters));
                 representation = await EnterStateAsync(representation, initialTransition, args);
             }
 
@@ -355,7 +351,7 @@ namespace Stateless
         /// is fired.
         /// </summary>
         /// <param name="unhandledTriggerAction"></param>
-        public void OnUnhandledTriggerAsync(Func<TState, TTrigger, Task> unhandledTriggerAction)
+        public void OnUnhandledTriggerAsync(Func<TState, TTrigger, UniTask> unhandledTriggerAction)
         {
             if (unhandledTriggerAction == null) throw new ArgumentNullException(nameof(unhandledTriggerAction));
             _unhandledTriggerAction = new UnhandledTriggerAction.Async((s, t, c) => unhandledTriggerAction(s, t));
@@ -366,7 +362,7 @@ namespace Stateless
         /// is fired.
         /// </summary>
         /// <param name="unhandledTriggerAction">An asynchronous action to call when an unhandled trigger is fired.</param>
-        public void OnUnhandledTriggerAsync(Func<TState, TTrigger, ICollection<string>, Task> unhandledTriggerAction)
+        public void OnUnhandledTriggerAsync(Func<TState, TTrigger, ICollection<string>, UniTask> unhandledTriggerAction)
         {
             if (unhandledTriggerAction == null) throw new ArgumentNullException(nameof(unhandledTriggerAction));
             _unhandledTriggerAction = new UnhandledTriggerAction.Async(unhandledTriggerAction);
@@ -378,7 +374,7 @@ namespace Stateless
         /// </summary>
         /// <param name="onTransitionAction">The asynchronous action to execute, accepting the details
         /// of the transition.</param>
-        public void OnTransitionedAsync(Func<Transition, Task> onTransitionAction)
+        public void OnTransitionedAsync(Func<Transition, UniTask> onTransitionAction)
         {
             if (onTransitionAction == null) throw new ArgumentNullException(nameof(onTransitionAction));
             _onTransitionedEvent.Register(onTransitionAction);
@@ -391,7 +387,7 @@ namespace Stateless
         /// </summary>
         /// <param name="onTransitionAction">The asynchronous action to execute, accepting the details
         /// of the transition.</param>
-        public void OnTransitionCompletedAsync(Func<Transition, Task> onTransitionAction)
+        public void OnTransitionCompletedAsync(Func<Transition, UniTask> onTransitionAction)
         {
             if (onTransitionAction == null) throw new ArgumentNullException(nameof(onTransitionAction));
             _onTransitionCompletedEvent.Register(onTransitionAction);

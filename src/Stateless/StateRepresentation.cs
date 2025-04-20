@@ -238,10 +238,11 @@ namespace Stateless
                 {
                     if (aStateRep.TryFindLocalHandler(transition.Trigger, args, out TriggerBehaviourResult result))
                     {
+#if TASKS
                         // Trigger handler found in this state
                         if (result.Handler is InternalTriggerBehaviour.Async)
                             throw new InvalidOperationException("Running Async internal actions in synchronous mode is not allowed");
-
+#endif
                         internalTransition = result.Handler as InternalTriggerBehaviour.Sync;
                         break;
                     }
